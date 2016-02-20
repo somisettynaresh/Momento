@@ -2,6 +2,7 @@ package crazyfour.hackisu.isu.edu.momento.activities;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -91,10 +92,13 @@ public class CalendarActivity extends AppCompatActivity {
 
         lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void onItemClick(AdapterView<?> a, View v, int position, long id) {
+            public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
                 Object o = lv.getItemAtPosition(position);
-                Event fullObject = (Event) o;
-                Toast.makeText(CalendarActivity.this, "You have chosen: " + " " + fullObject.getName(), Toast.LENGTH_LONG).show();
+                Event activity = (Event) o;
+                Intent intent = new Intent(CalendarActivity.this, EventDetailsActivity.class);
+                intent.putExtra("activity",activity);
+                startActivity(intent);
+                Toast.makeText(CalendarActivity.this, "You have chosen: " + " " + activity.getName(), Toast.LENGTH_LONG).show();
             }
         });
 

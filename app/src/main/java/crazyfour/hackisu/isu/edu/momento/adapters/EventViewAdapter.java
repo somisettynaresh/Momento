@@ -45,10 +45,10 @@ public class EventViewAdapter extends BaseAdapter {
         if (convertView == null) {
             convertView = mInflater.inflate(R.layout.event_row_view, null);
             holder = new ViewHolder();
-            holder.txtName = (TextView) convertView.findViewById(R.id.name);
+            holder.txtName = (TextView) convertView.findViewById(R.id.activity_name);
             holder.txtDesc = (TextView) convertView
-                    .findViewById(R.id.cityState);
-            holder.txtDate = (TextView) convertView.findViewById(R.id.phone);
+                    .findViewById(R.id.activity_desc);
+            holder.txtDate = (TextView) convertView.findViewById(R.id.activity_date);
 
             convertView.setTag(holder);
         } else {

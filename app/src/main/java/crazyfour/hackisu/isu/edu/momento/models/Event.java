@@ -1,11 +1,12 @@
 package crazyfour.hackisu.isu.edu.momento.models;
 
+import java.io.Serializable;
 import java.util.Date;
 
 /**
  * Created by Naresh on 2/20/2016.
  */
-public class Event {
+public class Event implements Serializable{
     private String name;
     private String desc;
     private Date startTime;
