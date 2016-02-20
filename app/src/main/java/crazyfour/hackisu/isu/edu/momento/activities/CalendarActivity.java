@@ -31,6 +31,9 @@ import com.google.api.services.calendar.CalendarScopes;
 import com.google.api.services.calendar.model.Events;
 
 import java.io.IOException;
+
+import java.text.ParseException;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -40,8 +43,10 @@ import java.util.List;
 import crazyfour.hackisu.isu.edu.momento.R;
 import crazyfour.hackisu.isu.edu.momento.adapters.EventViewAdapter;
 import crazyfour.hackisu.isu.edu.momento.builders.EventBuilder;
+import crazyfour.hackisu.isu.edu.momento.daos.EventEntryDAO;
 import crazyfour.hackisu.isu.edu.momento.models.CallEntry;
 import crazyfour.hackisu.isu.edu.momento.models.Event;
+import crazyfour.hackisu.isu.edu.momento.utilities.DatabaseHelper;
 
 public class CalendarActivity extends AppCompatActivity {
     private com.google.api.services.calendar.Calendar mService = null;
@@ -64,6 +69,7 @@ public class CalendarActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
+        createEventsFromCallLogs();
         ArrayList<Event> events = GetEvents();
 
         final ListView lv = (ListView) findViewById(R.id.srListView);
@@ -154,19 +160,28 @@ public class CalendarActivity extends AppCompatActivity {
         return calendar.getTimeInMillis();
     }
 
-    private ArrayList<Event> createEventsFromCallLogs() {
+
+    private void createEventsFromCallLogs() {
         ArrayList<Event> events = new ArrayList<>();
         ArrayList<CallEntry> callEntries = getCallLogDetails();
         for (CallEntry call : callEntries) {
-            events.add(EventBuilder.from(call));
+            DatabaseHelper dbHelper = new DatabaseHelper(getApplicationContext());
+            EventEntryDAO eventEntryDAO = new EventEntryDAO(dbHelper.getWritableDatabase());
+            eventEntryDAO.insert(EventBuilder.from(call));
+
         }
-        return events;
     }
 
     private ArrayList<Event> GetEvents() {
         ArrayList<Event> events = new ArrayList<>();
         events.add(new Event("Test Event", "Test Event Desc", new Date(), new Date()));
-        events.addAll(createEventsFromCallLogs());
+        DatabaseHelper dbHelper = new DatabaseHelper(getApplicationContext());
+        EventEntryDAO eventEntryDAO = new EventEntryDAO(dbHelper.getWritableDatabase());
+        try {
+            events.addAll(eventEntryDAO.getEventListByDate(new Date(getToday())));
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
         return events;
     }
 

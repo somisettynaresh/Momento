@@ -3,7 +3,7 @@ package crazyfour.hackisu.isu.edu.momento.constants;
 /**
  * Created by Sriram on 20-02-2016.
  */
-public class Constants {
+public class LocationConstants {
     public static final int SUCCESS_RESULT = 0;
     public static final int FAILURE_RESULT = 1;
     public static final String PACKAGE_NAME =

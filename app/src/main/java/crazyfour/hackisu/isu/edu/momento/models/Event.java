@@ -18,6 +18,10 @@ public class Event {
         this.endTime = endTime;
     }
 
+    public Event(){
+
+    }
+
     public String getName() {
         return name;
     }
