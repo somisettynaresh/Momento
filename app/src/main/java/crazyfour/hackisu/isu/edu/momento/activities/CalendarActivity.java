@@ -30,6 +30,7 @@ import com.google.api.client.util.DateTime;
 import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.services.calendar.CalendarScopes;
 import com.google.api.services.calendar.model.Events;
+import com.telerik.widget.list.RadListView;
 
 import java.io.IOException;
 
@@ -42,6 +43,7 @@ import java.util.Date;
 import java.util.List;
 
 import crazyfour.hackisu.isu.edu.momento.R;
+import crazyfour.hackisu.isu.edu.momento.adapters.ActivityViewAdapter;
 import crazyfour.hackisu.isu.edu.momento.adapters.EventViewAdapter;
 import crazyfour.hackisu.isu.edu.momento.builders.EventBuilder;
 import crazyfour.hackisu.isu.edu.momento.daos.EventBackupTimeDAO;

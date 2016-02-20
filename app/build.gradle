@@ -1,5 +1,12 @@
 apply plugin: 'com.android.application'
 
+repositories {
+    mavenCentral()
+    flatDir{
+        dirs 'libs'
+    }
+}
+
 android {
     compileSdkVersion 23
     buildToolsVersion "23.0.2"
@@ -31,4 +38,15 @@ dependencies {
     compile('com.google.apis:google-api-services-calendar:v3-rev125-1.20.0') {
         exclude group: 'org.apache.httpcomponents'
     }
+    compile files('libs/java2html.jar')
+    compile files('libs/slf4j-api-1.7.7.jar')
+    compile files('libs/flickrj-android-2.1.0.jar')
+    compile(name:'Common-2016.1.113-trial-release', ext:'aar')
+    compile(name:'Data-2016.1.113-trial-release', ext:'aar')
+    compile(name:'Primitives-2016.1.113-trial-release', ext:'aar')
+    compile(name:'Input-2016.1.113-trial-release', ext:'aar')
+    compile(name:'Chart-2016.1.113-trial-release', ext:'aar')
+    compile(name:'List-2016.1.113-trial-release', ext:'aar')
+    compile(name:'Feedback-2016.1.113-trial-release', ext:'aar')
+    compile 'com.facebook.fresco:fresco:0.5.0+'
 }
