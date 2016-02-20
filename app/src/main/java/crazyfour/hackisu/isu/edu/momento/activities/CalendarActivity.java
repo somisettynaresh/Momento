@@ -43,6 +43,7 @@ import java.util.List;
 import crazyfour.hackisu.isu.edu.momento.R;
 import crazyfour.hackisu.isu.edu.momento.adapters.EventViewAdapter;
 import crazyfour.hackisu.isu.edu.momento.builders.EventBuilder;
+import crazyfour.hackisu.isu.edu.momento.daos.EventBackupTimeDAO;
 import crazyfour.hackisu.isu.edu.momento.daos.EventEntryDAO;
 import crazyfour.hackisu.isu.edu.momento.models.CallEntry;
 import crazyfour.hackisu.isu.edu.momento.models.Event;
@@ -146,8 +147,20 @@ public class CalendarActivity extends AppCompatActivity {
             int type = Integer.parseInt(callLogCursor.getString(callLogCursor.getColumnIndex(CallLog.Calls.TYPE)));
             Calendar dateOfCall = Calendar.getInstance();
             dateOfCall.setTimeInMillis(Long.parseLong(callLogCursor.getString(callLogCursor.getColumnIndex(CallLog.Calls.DATE))));
-            callEntries.add(new CallEntry(name, dateOfCall.getTime(), duration, num, type));
-            System.out.println("Call to " + name + " number:  " + num + " for " + duration + " mins");
+            //filter call logs based on last backup time stamp
+            DatabaseHelper dbHelper = new DatabaseHelper(getApplicationContext());
+            EventBackupTimeDAO eventBackupTimeDAO = new EventBackupTimeDAO(dbHelper.getReadableDatabase());
+            Date lastBackupTime = new Date(getToday());
+            try {
+               lastBackupTime = eventBackupTimeDAO.getLastBackupTime(type);
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+            if(dateOfCall.getTime().compareTo(lastBackupTime) >= 0) {
+                callEntries.add(new CallEntry(name, dateOfCall.getTime(), duration, num, type));
+                System.out.println("Call to " + name + " number:  " + num + " for " + duration + " mins");
+            }
+            dbHelper.close();
         }
         System.out.println("Size of the call Entries " + callEntries.size());
         return callEntries;
@@ -164,23 +177,28 @@ public class CalendarActivity extends AppCompatActivity {
     private void createEventsFromCallLogs() {
         ArrayList<Event> events = new ArrayList<>();
         ArrayList<CallEntry> callEntries = getCallLogDetails();
+        DatabaseHelper dbHelper = new DatabaseHelper(getApplicationContext());
+        EventEntryDAO eventEntryDAO = new EventEntryDAO(dbHelper.getWritableDatabase());
+        EventBackupTimeDAO eventBackupTimeDAO = new EventBackupTimeDAO(dbHelper.getReadableDatabase());
         for (CallEntry call : callEntries) {
-            DatabaseHelper dbHelper = new DatabaseHelper(getApplicationContext());
-            EventEntryDAO eventEntryDAO = new EventEntryDAO(dbHelper.getWritableDatabase());
             eventEntryDAO.insert(EventBuilder.from(call));
-
+            eventBackupTimeDAO.insert(call.getType(),new Date(System.currentTimeMillis()));
         }
+        dbHelper.close();
+
     }
 
     private ArrayList<Event> GetEvents() {
         ArrayList<Event> events = new ArrayList<>();
         events.add(new Event("Test Event", "Test Event Desc", new Date(), new Date()));
         DatabaseHelper dbHelper = new DatabaseHelper(getApplicationContext());
-        EventEntryDAO eventEntryDAO = new EventEntryDAO(dbHelper.getWritableDatabase());
+        EventEntryDAO eventEntryDAO = new EventEntryDAO(dbHelper.getReadableDatabase());
         try {
             events.addAll(eventEntryDAO.getEventListByDate(new Date(getToday())));
         } catch (ParseException e) {
             e.printStackTrace();
+        }finally {
+            dbHelper.close();
         }
         return events;
     }
