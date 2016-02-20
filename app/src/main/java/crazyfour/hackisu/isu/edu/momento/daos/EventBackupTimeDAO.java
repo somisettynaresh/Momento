@@ -6,6 +6,7 @@ import android.database.sqlite.SQLiteDatabase;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 
 /**
@@ -16,11 +17,11 @@ public class EventBackupTimeDAO {
     private SQLiteDatabase db;
     private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-    public EventBackupTimeDAO(SQLiteDatabase db){
+    public EventBackupTimeDAO(SQLiteDatabase db) {
         this.db = db;
     }
 
-    public long insert(int eventType, Date backupTime){
+    public long insert(int eventType, Date backupTime) {
         ContentValues values = new ContentValues();
         //
         values.put("BACKUP_TIME", dateFormat.format(backupTime));
@@ -28,11 +29,11 @@ public class EventBackupTimeDAO {
         String selection = "EVENT_TYPE = ?";
 
         long newRowId;
-        newRowId = db.update("EVENT_BACKUP_TIME", values, selection, new String[]{""+eventType});
+        newRowId = db.update("EVENT_BACKUP_TIME", values, selection, new String[]{"" + eventType});
 
-        if(newRowId <=0){
-            values.put("EVENT_TYPE",eventType);
-            newRowId = db.insert("EVENT_BACKUP_TIME",null,values);
+        if (newRowId <= 0) {
+            values.put("EVENT_TYPE", eventType);
+            newRowId = db.insert("EVENT_BACKUP_TIME", null, values);
         }
 
         return newRowId;
@@ -47,8 +48,14 @@ public class EventBackupTimeDAO {
 
         String selection = "EVENT_TYPE = ?";
 
-        Cursor c = db.query("EVENT_BACKUP_TIME",projection,selection,new String[]{""+eventType},null,null,null);
-        if(c.moveToFirst()) lastBackupTime = dateFormat.parse(c.getString(0));
+        Cursor c = db.query("EVENT_BACKUP_TIME", projection, selection, new String[]{"" + eventType}, null, null, null);
+        if (c.moveToFirst()) {
+            lastBackupTime = dateFormat.parse(c.getString(0));
+        } else {
+            Calendar calendar = Calendar.getInstance();
+            calendar.add(Calendar.DAY_OF_MONTH, -1);
+            lastBackupTime =calendar.getTime();
+        }
 
         return lastBackupTime;
     }
