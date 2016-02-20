@@ -56,6 +56,12 @@ public class CalendarActivity extends AppCompatActivity {
     private static final String[] SCOPES = {CalendarScopes.CALENDAR_READONLY};
 
     @Override
+    protected void onResume(){
+        super.onResume();
+       refreshActivity();
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_calendar);
@@ -70,6 +76,12 @@ public class CalendarActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
+
+        refreshActivity();
+
+    }
+
+    private void refreshActivity(){
         createEventsFromCallLogs();
         ArrayList<Event> events = GetEvents();
 
