@@ -21,12 +21,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         db.execSQL(SQLConstants.CREATE_EVENT_ENTRY_TABLE);
         db.execSQL(SQLConstants.CREATE_EVENT_BACKUP_TIME_TABLE);
+        db.execSQL(SQLConstants.CREATE_LOCATION_DATA);
     }
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         // This database is only a cache for online data, so its upgrade policy is
         // to simply to discard the data and start over
         db.execSQL(SQLConstants.DELETE_EVENT_ENTRY_TABLE);
         db.execSQL(SQLConstants.DELETE_EVENT_BACKUP_TIME_TABLE);
+        db.execSQL(SQLConstants.DELETE_LOCATION_DATA);
         onCreate(db);
     }
     public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {

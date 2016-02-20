@@ -1,28 +1,75 @@
 package crazyfour.hackisu.isu.edu.momento.activities;
 
-import android.Manifest;
+import android.app.AlarmManager;
+import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.ResultReceiver;
 import android.provider.CallLog;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
-import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 
+import crazyfour.hackisu.isu.edu.momento.FetchAddressIntentService;
 import crazyfour.hackisu.isu.edu.momento.R;
+import crazyfour.hackisu.isu.edu.momento.constants.LocationConstants;
+import crazyfour.hackisu.isu.edu.momento.daos.LocationDataDAO;
 import crazyfour.hackisu.isu.edu.momento.models.CallEntry;
+import crazyfour.hackisu.isu.edu.momento.utilities.DatabaseHelper;
 
-public class HomeActivity extends AppCompatActivity {
+public class HomeActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener {
+
+    private AddressResultReceiver mResultReceiver = new AddressResultReceiver(new Handler());
+
+    protected void startIntentService(Location mLastLocation) {
+        Intent intent = new Intent(this, FetchAddressIntentService.class);
+        intent.putExtra(LocationConstants.RECEIVER, mResultReceiver);
+        intent.putExtra(LocationConstants.LOCATION_DATA_EXTRA, mLastLocation);
+        startService(intent);
+    }
+
+    @Override
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+        System.out.println("Google play service connection failed");
+    }
+
+    class AddressResultReceiver extends ResultReceiver {
+        public AddressResultReceiver(Handler handler) {
+            super(handler);
+        }
+
+        @Override
+        protected void onReceiveResult(int resultCode, Bundle resultData) {
+            String message = resultData.getString(LocationConstants.RESULT_DATA_KEY);
+            if(resultCode == LocationConstants.SUCCESS_RESULT) {
+                DatabaseHelper dbHelper = new DatabaseHelper(getApplicationContext());
+                LocationDataDAO locationDataDAO = new LocationDataDAO(dbHelper.getWritableDatabase());
+                System.out.println(locationDataDAO.insert(message, new Date(System.currentTimeMillis())));
+                dbHelper.close();
+            } else {
+                System.out.println(message);
+            }
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,7 +86,32 @@ public class HomeActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
-        getCallLogDetails();
+        getLocationAndAddress();
+        //getCallLogDetails();
+    }
+
+    private void getLocationAndAddress() {
+        LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        // Define a listener that responds to location updates
+        LocationListener locationListener = new LocationListener() {
+            public void onLocationChanged(Location location) {
+                System.out.println("Starting Intent Service");
+                // Called when a new location is found by the network location provider
+                startIntentService(location);
+            }
+
+            public void onStatusChanged(String provider, int status, Bundle extras) {}
+
+            public void onProviderEnabled(String provider) {}
+
+            public void onProviderDisabled(String provider) {}
+        };
+        if ( ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED ) {
+            System.out.println("Insufficient permissions");
+        }
+        // Register the listener with the Location Manager to receive location updates
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 900000, 20, locationListener);
+
     }
 
     private ArrayList<CallEntry> getCallLogDetails() {
