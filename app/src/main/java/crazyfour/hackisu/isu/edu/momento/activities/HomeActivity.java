@@ -1,4 +1,4 @@
-package crazyfour.hackisu.isu.edu.momento;
+package crazyfour.hackisu.isu.edu.momento.activities;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 
+import crazyfour.hackisu.isu.edu.momento.R;
 import crazyfour.hackisu.isu.edu.momento.models.CallEntry;
 
 public class HomeActivity extends AppCompatActivity {
