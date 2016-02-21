@@ -48,7 +48,7 @@ public class EventEntryDAO {
     public List<Event> getEventListByDate(java.util.Date startDate) throws ParseException {
         List<Event> eventList = new ArrayList<Event>();
 
-        String[] projection = {"EVENT_NAME","EVENT_DESC","START_TIME","END_TIME","EVENT_TYPE","EVENT_COMMENT","EVENT_ATTACHMENT"};
+        String[] projection = {"EVENT_NAME","EVENT_DESC","START_TIME","END_TIME","EVENT_TYPE","EVENT_COMMENT","EVENT_ATTACHMENT","EVENT_ID"};
 
         String selection = "START_TIME > ?";
 
@@ -65,6 +65,7 @@ public class EventEntryDAO {
             event.setEventType(c.getInt(4));
             event.setEventComment(c.getString(5));
             event.setEventAttachment(c.getString(6));
+            event.setEventID(c.getInt(7));
             eventList.add(event);
 
             stat = c.moveToNext();

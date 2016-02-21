@@ -1,6 +1,7 @@
 package crazyfour.hackisu.isu.edu.momento.activities;
 
 import android.Manifest;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -15,6 +16,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.ResultReceiver;
 import android.provider.CallLog;
+import android.provider.ContactsContract;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
@@ -190,7 +192,7 @@ public class CalendarActivity extends AppCompatActivity {
                 return "";
             }
         };
-
+        getSMSDetails();
         //task.execute();
     }
 
@@ -353,15 +355,12 @@ public class CalendarActivity extends AppCompatActivity {
 
         if (cursor.moveToFirst()) {
             for (int i = 0; i < cursor.getCount(); i++) {
-                String body = cursor.getString(cursor.getColumnIndexOrThrow("body"))
-                        .toString();
-                String number = cursor.getString(cursor.getColumnIndexOrThrow("address"))
-                        .toString();
-                String date = cursor.getString(cursor.getColumnIndexOrThrow("date"))
-                        .toString();
+                String body = cursor.getString(cursor.getColumnIndex("body"));
+                String number = cursor.getString(cursor.getColumnIndex("address"));
+                String date = cursor.getString(cursor.getColumnIndex("date"));
+                String contactName = getContactName(getApplicationContext(),number);
                 Date smsDayTime = new Date(Long.valueOf(date));
-                String type = cursor.getString(cursor.getColumnIndexOrThrow("type"))
-                        .toString();
+                String type = cursor.getString(cursor.getColumnIndex("type"));
                 String typeOfSMS = null;
                 switch (Integer.parseInt(type)) {
                     case 1:
@@ -377,14 +376,35 @@ public class CalendarActivity extends AppCompatActivity {
                         break;
                 }
 
-                stringBuffer.append("\nPhone Number:--- " + number + " \nMessage Type:--- "
+                stringBuffer.append("\nPhone Number:--- " + number + " \nContact Name -"+contactName+" \nMessage Type:--- "
                         + typeOfSMS + " \nMessage Date:--- " + smsDayTime
                         + " \nMessage Body:--- " + body);
+                System.out.println(stringBuffer);
                 stringBuffer.append("\n----------------------------------");
                 cursor.moveToNext();
             }
         }
         cursor.close();
+    }
+
+    private String getContactName(Context context, String phoneNumber) {
+        ContentResolver cr = context.getContentResolver();
+        Uri uri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI,
+                Uri.encode(phoneNumber));
+        Cursor cursor = cr.query(uri,
+                new String[]{ContactsContract.PhoneLookup.DISPLAY_NAME}, null, null, null);
+        if (cursor == null) {
+            return null;
+        }
+        String contactName = null;
+        if (cursor.moveToFirst()) {
+            contactName = cursor.getString(cursor
+                    .getColumnIndex(ContactsContract.PhoneLookup.DISPLAY_NAME));
+        }
+        if (cursor != null && !cursor.isClosed()) {
+            cursor.close();
+        }
+        return contactName;
     }
 
 }
