@@ -14,7 +14,7 @@ public class CallEntrytFilter {
     public static ArrayList<CallEntry> filterByDuration(List<CallEntry> entryList){
         ArrayList<CallEntry> filteredList = new ArrayList<CallEntry>();
         for(CallEntry entry : entryList){
-            if(entry.getDuration() >= 1 ){
+            if(entry.getDuration() >= 0 ){
                 filteredList.add(entry);
             }
         }

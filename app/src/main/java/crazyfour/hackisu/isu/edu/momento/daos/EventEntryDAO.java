@@ -50,13 +50,16 @@ public class EventEntryDAO {
 
         String[] projection = {"EVENT_NAME","EVENT_DESC","START_TIME","END_TIME","EVENT_TYPE","EVENT_COMMENT","EVENT_ATTACHMENT","EVENT_ID"};
 
-        String selection = "START_TIME > ?";
+        String selection = "START_TIME >= ? AND START_TIME < ?";
 
-        Cursor c = db.query("EVENT_ENTRY",projection,selection,new String[]{dateFormat.format(startDate)},null,null,"START_TIME DESC");
+        java.util.Date endDate = new Date(startDate.getTime()+(24*3600*1000));
+
+        Cursor c = db.query("EVENT_ENTRY",projection,selection,new String[]{dateFormat.format(startDate),dateFormat.format(endDate)},null,null,"START_TIME DESC");
 
         boolean stat = c.moveToFirst();
 
         while(stat) {
+            System.out.println("ADding element to list");
             Event event = new Event();
             event.setName(c.getString(0));
             event.setDesc(c.getString(1));

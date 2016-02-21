@@ -66,6 +66,7 @@ import crazyfour.hackisu.isu.edu.momento.daos.LocationDataDAO;
 import crazyfour.hackisu.isu.edu.momento.models.CallEntry;
 import crazyfour.hackisu.isu.edu.momento.models.Event;
 import crazyfour.hackisu.isu.edu.momento.models.LocationData;
+import crazyfour.hackisu.isu.edu.momento.models.TextMessage;
 import crazyfour.hackisu.isu.edu.momento.utilities.DatabaseHelper;
 
 public class CalendarActivity extends AppCompatActivity {
@@ -347,11 +348,12 @@ public class CalendarActivity extends AppCompatActivity {
         return eventStrings;
     }
 
-    private void getSMSDetails() {
-        StringBuffer stringBuffer = new StringBuffer();
-        //stringBuffer.append("*********SMS History*************** :");
+    private List<TextMessage> getSMSDetails() {
+
+        List<TextMessage> messageList = new ArrayList<TextMessage>();
         Uri uri = Uri.parse("content://sms");
-        Cursor cursor = getContentResolver().query(uri, null, null, null, null);
+        String selection = "date >= ?";
+        Cursor cursor = getContentResolver().query(uri, null, selection, new String[]{""+getToday()}, null);
 
         if (cursor.moveToFirst()) {
             for (int i = 0; i < cursor.getCount(); i++) {
@@ -375,16 +377,15 @@ public class CalendarActivity extends AppCompatActivity {
                         typeOfSMS = "DRAFT";
                         break;
                 }
-
-                stringBuffer.append("\nPhone Number:--- " + number + " \nContact Name -"+contactName+" \nMessage Type:--- "
-                        + typeOfSMS + " \nMessage Date:--- " + smsDayTime
-                        + " \nMessage Body:--- " + body);
-                System.out.println(stringBuffer);
-                stringBuffer.append("\n----------------------------------");
+                if(typeOfSMS == "INBOX" || typeOfSMS == "SENT"){
+                    TextMessage message = new TextMessage(contactName,number,body,smsDayTime);
+                    messageList.add(message);
+                }
                 cursor.moveToNext();
             }
         }
         cursor.close();
+        return messageList;
     }
 
     private String getContactName(Context context, String phoneNumber) {
