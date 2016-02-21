@@ -55,7 +55,7 @@ public class CreateEventActivity extends AppCompatActivity {
         Calendar cal = Calendar.getInstance();
         cal.setTime(new Date());
         String[] timeParts = String.valueOf(eventTimeView.getText()).split(":");
-        cal.set(Calendar.HOUR_OF_DAY, parseInt(timeParts[0].trim()));
+        cal.set(Calendar.HOUR, parseInt(timeParts[0].trim()));
         cal.set(Calendar.MINUTE, parseInt(timeParts[1].trim()));
         cal.set(Calendar.AM_PM, timeParts[2].trim() == "AM" ? 0 : 1);
         Event event = new Event(eventNameView.getText().toString(), eventDescView.getText().toString(), cal.getTime(), cal.getTime(), 4);
