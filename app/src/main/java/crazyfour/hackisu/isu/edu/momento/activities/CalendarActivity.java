@@ -156,7 +156,6 @@ public class CalendarActivity extends AppCompatActivity {
                 Intent intent = new Intent(CalendarActivity.this, EventDetailsActivity.class);
                 intent.putExtra("activity", activity);
                 startActivity(intent);
-                Toast.makeText(CalendarActivity.this, "You have chosen: " + " " + activity.getName(), Toast.LENGTH_LONG).show();
             }
         });
 

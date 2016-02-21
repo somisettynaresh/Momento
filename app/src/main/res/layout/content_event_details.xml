@@ -68,7 +68,6 @@
         android:id="@+id/activity_details_notes"
         android:layout_width="match_parent"
         android:gravity="left"
-        android:minHeight="?listPreferredItemHeight"
         />
 
     <TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -85,6 +84,8 @@
                 >
                 <TextView
                     android:id="@+id/dispVPName"
+                    android:textSize="12sp"
+                    android:textColor="@color/white"
                     android:layout_height="wrap_content"
                     android:layout_width="wrap_content"
                     android:padding="3dip"
@@ -141,24 +142,20 @@
             />
 
         <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
             android:id="@+id/button2"
-            android:text="Save"
-            android:enabled="false"
-            android:layout_alignTop="@+id/button"
-            android:layout_alignParentRight="true"
-            />
-
-        <Button
-            android:layout_width="wrap_content"
+            android:layout_width="120dp"
             android:layout_height="wrap_content"
-            android:id="@+id/button5"
-            android:text="Cancel"
-            android:enabled="false"
-            android:layout_alignTop="@+id/button"
-            android:layout_alignParentLeft="true"
-            />
+            android:textStyle="bold"
+            android:layout_marginLeft="100dp"
+            android:layout_marginTop="100dp"
+            android:background="#ff3377"
+            android:paddingBottom="5sp"
+            android:paddingLeft="25sp"
+            android:paddingRight="25sp"
+            android:textSize="15sp"
+            android:paddingTop="5sp"
+            android:text="Save"
+            android:textColor="@color/white" />
 
     </RelativeLayout>
 
