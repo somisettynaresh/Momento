@@ -1,18 +1,76 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:orientation="vertical" >
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="40dp"
+    android:orientation="vertical">
 
-    <TextView
-        android:layout_width="fill_parent"
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_vertical|center_horizontal"
-        android:text="Custom ListView Example" />
+        android:background="@drawable/data_form_table_bg"
+        android:orientation="vertical"
+        android:paddingEnd="10dp"
+        android:paddingRight="10dp"
+        android:weightSum="1">
 
-    <ListView
-        android:id="@+id/srListView"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:layout_marginTop="30dp"/>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:weightSum="1">
 
-</LinearLayout>
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/data_form_group_header"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="30dp"
+                    android:layout_weight="0.32"
+                    android:paddingLeft="40dp"
+                    android:text="Activities"
+                    android:textColor="@color/white"
+                    android:textSize="25dp" />
+                <TextView
+                    android:id="@+id/activities_count_header"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="15dp"
+                    android:layout_weight="0.32"
+                    android:paddingLeft="40dp"
+                    android:text="22 Activities on Feb 20 2016"
+                    android:textColor="@color/white"
+                    android:textSize="15dp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginRight="4dp">
+
+            </LinearLayout>
+
+            <ImageView
+                android:layout_width="36dp"
+                android:layout_height="43dp"
+                android:layout_marginTop="40dp"
+                android:layout_marginRight="0dp"
+                android:adjustViewBounds="true"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_calendar_calendar"
+                android:layout_marginLeft="50dp" />
+
+
+        </LinearLayout>
+    </LinearLayout>
+        <ListView
+            android:id="@+id/srListView"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:background="@drawable/bg_listview" />
+
+    </LinearLayout>

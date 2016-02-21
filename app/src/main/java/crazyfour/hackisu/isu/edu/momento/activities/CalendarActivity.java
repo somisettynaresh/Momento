@@ -20,10 +20,12 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.view.menu.MenuBuilder;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.api.client.extensions.android.http.AndroidHttp;
@@ -42,6 +44,7 @@ import java.io.IOException;
 
 import java.text.ParseException;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -127,9 +130,15 @@ public class CalendarActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onResume(){
+    protected void onResume() {
         super.onResume();
-       refreshActivity();
+        refreshActivity();
+    }
+
+    private void updateActivityCount(int count, String date) {
+        final TextView countHeader = (TextView) findViewById(R.id.activities_count_header);
+        countHeader.setText(count + " activities on " + date);
+
     }
 
     @Override
@@ -137,6 +146,7 @@ public class CalendarActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_calendar);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar.setTitle("Moments");
         setSupportActionBar(toolbar);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
@@ -152,10 +162,9 @@ public class CalendarActivity extends AppCompatActivity {
         getLocationAndAddress();
     }
 
-
-    private void refreshActivity(){
+    private void refreshActivity() {
         createEventsFromCallLogs();
-        ArrayList<Event> events = GetEvents();
+        ArrayList<Event> events = GetEvents(new Date(getToday()));
 
         final ListView lv = (ListView) findViewById(R.id.srListView);
         lv.setAdapter(new EventViewAdapter(this, events));
@@ -181,27 +190,13 @@ public class CalendarActivity extends AppCompatActivity {
                 return "";
             }
         };
+
         //task.execute();
     }
 
     private ArrayList<CallEntry> getCallLogDetails() {
         ArrayList<CallEntry> callEntries = new ArrayList<>();
-        /*Cursor callLogCursor = managedQuery(allCalls, null, null, null, null);
-
-        while (callLogCursor.moveToNext()) {
-            String num = callLogCursor.getString(callLogCursor.getColumnIndex(CallLog.Calls.NUMBER));// for  number
-            String name = callLogCursor.getString(callLogCursor.getColumnIndex(CallLog.Calls.CACHED_NAME));// for name
-            int duration = Integer.parseInt(callLogCursor.getString(callLogCursor.getColumnIndex(CallLog.Calls.DURATION)));// for duration
-            int type = Integer.parseInt(callLogCursor.getString(callLogCursor.getColumnIndex(CallLog.Calls.TYPE)));
-            Calendar dateOfCall = Calendar.getInstance();
-            dateOfCall.setTimeInMillis(Long.parseLong(callLogCursor.getString(callLogCursor.getColumnIndex(CallLog.Calls.DATE))));
-            callEntries.add(new CallEntry(name, dateOfCall.getTime(), duration, num, type));
-            System.out.println("Call to " + name + " number:  " + num + " for " + duration + " mins");
-        }
-        */
-
-
-        String[] strFields = {
+               String[] strFields = {
                 android.provider.CallLog.Calls.NUMBER,
                 android.provider.CallLog.Calls.TYPE,
                 android.provider.CallLog.Calls.CACHED_NAME,
@@ -239,11 +234,11 @@ public class CalendarActivity extends AppCompatActivity {
             EventBackupTimeDAO eventBackupTimeDAO = new EventBackupTimeDAO(dbHelper.getReadableDatabase());
             Date lastBackupTime = new Date(getToday());
             try {
-               lastBackupTime = eventBackupTimeDAO.getLastBackupTime(type);
+                lastBackupTime = eventBackupTimeDAO.getLastBackupTime(type);
             } catch (ParseException e) {
                 e.printStackTrace();
             }
-            if(dateOfCall.getTime().compareTo(lastBackupTime) >= 0) {
+            if (dateOfCall.getTime().compareTo(lastBackupTime) >= 0) {
                 callEntries.add(new CallEntry(name, dateOfCall.getTime(), duration, num, type));
                 System.out.println("Call to " + name + " number:  " + num + " for " + duration + " mins");
             }
@@ -260,6 +255,11 @@ public class CalendarActivity extends AppCompatActivity {
         return calendar.getTimeInMillis();
     }
 
+    private String formatDate(Date date) {
+        Calendar calendar = Calendar.getInstance();
+        SimpleDateFormat sdf = new SimpleDateFormat("dd-MMM-yyyy");
+        return sdf.format(calendar.getTime());
+    }
 
     private void createEventsFromCallLogs() {
         ArrayList<Event> events = new ArrayList<>();
@@ -267,26 +267,29 @@ public class CalendarActivity extends AppCompatActivity {
         DatabaseHelper dbHelper = new DatabaseHelper(getApplicationContext());
         EventEntryDAO eventEntryDAO = new EventEntryDAO(dbHelper.getWritableDatabase());
         EventBackupTimeDAO eventBackupTimeDAO = new EventBackupTimeDAO(dbHelper.getReadableDatabase());
-        for (CallEntry call : callEntries) {
-            eventEntryDAO.insert(EventBuilder.from(call));
-            eventBackupTimeDAO.insert(call.getType(),new Date(System.currentTimeMillis()));
+        if (callEntries != null && !callEntries.isEmpty()) {
+            for (CallEntry call : callEntries) {
+                eventEntryDAO.insert(EventBuilder.from(call));
+                eventBackupTimeDAO.insert(call.getType(), new Date(System.currentTimeMillis()));
+            }
         }
         dbHelper.close();
 
     }
 
-    private ArrayList<Event> GetEvents() {
+    private ArrayList<Event> GetEvents(Date forDate) {
         ArrayList<Event> events = new ArrayList<>();
         //events.add(new Event("Test Event", "Test Event Desc", new Date(), new Date(),1));
         DatabaseHelper dbHelper = new DatabaseHelper(getApplicationContext());
         EventEntryDAO eventEntryDAO = new EventEntryDAO(dbHelper.getReadableDatabase());
         try {
-            events.addAll(eventEntryDAO.getEventListByDate(new Date(getToday())));
+            events.addAll(eventEntryDAO.getEventListByDate(forDate));
         } catch (ParseException e) {
             e.printStackTrace();
-        }finally {
+        } finally {
             dbHelper.close();
         }
+        updateActivityCount(events.size(), formatDate(forDate));
         return events;
     }
 
@@ -309,10 +312,9 @@ public class CalendarActivity extends AppCompatActivity {
             for (String s : event_list) {
                 System.out.println(s);
             }
-        }
-        catch (UserRecoverableAuthIOException e) {
+        } catch (UserRecoverableAuthIOException e) {
             startActivityForResult(e.getIntent(), 1001);
-        }catch (IOException ioe) {
+        } catch (IOException ioe) {
             System.out.println(ioe);
         }
 
