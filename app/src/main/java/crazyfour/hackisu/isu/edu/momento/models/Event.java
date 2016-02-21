@@ -11,18 +11,44 @@ public class Event implements Serializable{
     private String desc;
     private Date startTime;
     private Date endTime;
+    private int eventType;
+    private String eventComment;
+    private String eventAttachment;
 
-    public Event(String name, String desc, Date startTime, Date endTime) {
+    public Event(String name, String desc, Date startTime, Date endTime, int eventType) {
         this.name = name;
         this.desc = desc;
         this.startTime = startTime;
         this.endTime = endTime;
+        this.eventType = eventType;
     }
 
     public Event(){
 
     }
 
+    public String getEventAttachment() {
+        return eventAttachment;
+    }
+
+    public void setEventAttachment(String eventAttachment) {
+        this.eventAttachment = eventAttachment;
+    }
+
+    public String getEventComment() {
+        return eventComment;
+    }
+
+    public void setEventComment(String eventComment) {
+        this.eventComment = eventComment;
+    }
+
+    public int getEventType() {
+        return eventType;
+    }
+    public void setEventType(int eventType) {
+        this.eventType = eventType;
+    }
     public String getName() {
         return name;
     }

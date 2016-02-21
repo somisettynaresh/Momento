@@ -208,7 +208,7 @@ public class CalendarActivity extends AppCompatActivity {
 
     private ArrayList<Event> GetEvents() {
         ArrayList<Event> events = new ArrayList<>();
-        events.add(new Event("Test Event", "Test Event Desc", new Date(), new Date()));
+        //events.add(new Event("Test Event", "Test Event Desc", new Date(), new Date(),1));
         DatabaseHelper dbHelper = new DatabaseHelper(getApplicationContext());
         EventEntryDAO eventEntryDAO = new EventEntryDAO(dbHelper.getReadableDatabase());
         try {

@@ -10,6 +10,6 @@ public class EventBuilder {
 
     public static Event from(CallEntry callEntry) {
         return new Event("Phone Call", "Talked to " + callEntry.getName() + " for " +
-                callEntry.getDuration() + " mins", callEntry.getDate(), callEntry.getDate());
+                callEntry.getDuration() + " mins", callEntry.getDate(), callEntry.getDate(),1);
     }
 }
