@@ -6,13 +6,19 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.ResultReceiver;
 import android.provider.CallLog;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
@@ -42,15 +48,19 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
+import crazyfour.hackisu.isu.edu.momento.FetchAddressIntentService;
 import crazyfour.hackisu.isu.edu.momento.R;
 import crazyfour.hackisu.isu.edu.momento.adapters.ActivityViewAdapter;
 import crazyfour.hackisu.isu.edu.momento.adapters.EventViewAdapter;
 import crazyfour.hackisu.isu.edu.momento.builders.EventBuilder;
+import crazyfour.hackisu.isu.edu.momento.constants.LocationConstants;
 import crazyfour.hackisu.isu.edu.momento.daos.EventBackupTimeDAO;
 import crazyfour.hackisu.isu.edu.momento.daos.EventEntryDAO;
 import crazyfour.hackisu.isu.edu.momento.filters.CallEntrytFilter;
+import crazyfour.hackisu.isu.edu.momento.daos.LocationDataDAO;
 import crazyfour.hackisu.isu.edu.momento.models.CallEntry;
 import crazyfour.hackisu.isu.edu.momento.models.Event;
+import crazyfour.hackisu.isu.edu.momento.models.LocationData;
 import crazyfour.hackisu.isu.edu.momento.utilities.DatabaseHelper;
 
 public class CalendarActivity extends AppCompatActivity {
@@ -58,6 +68,63 @@ public class CalendarActivity extends AppCompatActivity {
     GoogleAccountCredential mCredential;
     private static final String PREF_ACCOUNT_NAME = "accountName";
     private static final String[] SCOPES = {CalendarScopes.CALENDAR_READONLY};
+    private AddressResultReceiver mResultReceiver = new AddressResultReceiver(new Handler());
+
+    protected void startIntentService(Location mLastLocation) {
+        Intent intent = new Intent(this, FetchAddressIntentService.class);
+        intent.putExtra(LocationConstants.RECEIVER, mResultReceiver);
+        intent.putExtra(LocationConstants.LOCATION_DATA_EXTRA, mLastLocation);
+        startService(intent);
+    }
+
+    class AddressResultReceiver extends ResultReceiver {
+        public AddressResultReceiver(Handler handler) {
+            super(handler);
+        }
+
+        @Override
+        protected void onReceiveResult(int resultCode, Bundle resultData) {
+            String message = resultData.getString(LocationConstants.RESULT_DATA_KEY);
+            if(resultCode == LocationConstants.SUCCESS_RESULT) {
+                DatabaseHelper dbHelper = new DatabaseHelper(getApplicationContext());
+                LocationDataDAO locationDataDAO = new LocationDataDAO(dbHelper.getWritableDatabase());
+                LocationData locationData = locationDataDAO.getLastLocation();
+                if(locationData != null) {
+                    Event event = EventBuilder.from(locationData,new Date(System.currentTimeMillis()));
+                    EventEntryDAO eventEntryDAO = new EventEntryDAO(dbHelper.getWritableDatabase());
+                    System.out.println("Event : " + eventEntryDAO.insert(event));
+                }
+                System.out.println("Location : " + locationDataDAO.insert(
+                        new LocationData(message, new Date(System.currentTimeMillis()))));
+                dbHelper.close();
+            } else {
+                System.out.println(message);
+            }
+        }
+    }
+
+    private void getLocationAndAddress() {
+        LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        // Define a listener that responds to location updates
+        LocationListener locationListener = new LocationListener() {
+            public void onLocationChanged(Location location) {
+                System.out.println("Starting Intent Service");
+                // Called when a new location is found by the network location provider
+                startIntentService(location);
+            }
+            public void onStatusChanged(String provider, int status, Bundle extras) {}
+            public void onProviderEnabled(String provider) {}
+            public void onProviderDisabled(String provider) {}
+        };
+        if ( ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED ) {
+            System.out.println("Insufficient permissions");
+        }
+        // Register the listener with the Location Manager to receive location updates
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+                LocationConstants.MIN_LOCATION_UPDATE_TIME,
+                LocationConstants.MIN_LOCATION_UPDATE_DISTANCE, locationListener);
+    }
 
     @Override
     protected void onResume(){
@@ -82,7 +149,7 @@ public class CalendarActivity extends AppCompatActivity {
         });
 
         refreshActivity();
-
+        getLocationAndAddress();
     }
 
 

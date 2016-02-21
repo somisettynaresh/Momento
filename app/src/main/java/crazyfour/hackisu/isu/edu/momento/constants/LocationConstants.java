@@ -13,4 +13,6 @@ public class LocationConstants {
             ".RESULT_DATA_KEY";
     public static final String LOCATION_DATA_EXTRA = PACKAGE_NAME +
             ".LOCATION_DATA_EXTRA";
+    public static final long MIN_LOCATION_UPDATE_TIME = 1000;
+    public static final float MIN_LOCATION_UPDATE_DISTANCE = 1000;
 }
