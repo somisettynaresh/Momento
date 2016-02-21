@@ -31,45 +31,17 @@ import java.util.Date;
 
 import crazyfour.hackisu.isu.edu.momento.FetchAddressIntentService;
 import crazyfour.hackisu.isu.edu.momento.R;
+import crazyfour.hackisu.isu.edu.momento.builders.EventBuilder;
 import crazyfour.hackisu.isu.edu.momento.constants.LocationConstants;
 import crazyfour.hackisu.isu.edu.momento.daos.LocationDataDAO;
 import crazyfour.hackisu.isu.edu.momento.models.CallEntry;
+import crazyfour.hackisu.isu.edu.momento.models.Event;
+import crazyfour.hackisu.isu.edu.momento.models.LocationData;
 import crazyfour.hackisu.isu.edu.momento.utilities.DatabaseHelper;
 
-public class HomeActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener {
+public class HomeActivity extends AppCompatActivity {
 
-    private AddressResultReceiver mResultReceiver = new AddressResultReceiver(new Handler());
 
-    protected void startIntentService(Location mLastLocation) {
-        Intent intent = new Intent(this, FetchAddressIntentService.class);
-        intent.putExtra(LocationConstants.RECEIVER, mResultReceiver);
-        intent.putExtra(LocationConstants.LOCATION_DATA_EXTRA, mLastLocation);
-        startService(intent);
-    }
-
-    @Override
-    public void onConnectionFailed(ConnectionResult connectionResult) {
-        System.out.println("Google play service connection failed");
-    }
-
-    class AddressResultReceiver extends ResultReceiver {
-        public AddressResultReceiver(Handler handler) {
-            super(handler);
-        }
-
-        @Override
-        protected void onReceiveResult(int resultCode, Bundle resultData) {
-            String message = resultData.getString(LocationConstants.RESULT_DATA_KEY);
-            if(resultCode == LocationConstants.SUCCESS_RESULT) {
-                DatabaseHelper dbHelper = new DatabaseHelper(getApplicationContext());
-                LocationDataDAO locationDataDAO = new LocationDataDAO(dbHelper.getWritableDatabase());
-                System.out.println(locationDataDAO.insert(message, new Date(System.currentTimeMillis())));
-                dbHelper.close();
-            } else {
-                System.out.println(message);
-            }
-        }
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,32 +58,7 @@ public class HomeActivity extends AppCompatActivity implements GoogleApiClient.O
                         .setAction("Action", null).show();
             }
         });
-        getLocationAndAddress();
-        //getCallLogDetails();
-    }
-
-    private void getLocationAndAddress() {
-        LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-        // Define a listener that responds to location updates
-        LocationListener locationListener = new LocationListener() {
-            public void onLocationChanged(Location location) {
-                System.out.println("Starting Intent Service");
-                // Called when a new location is found by the network location provider
-                startIntentService(location);
-            }
-
-            public void onStatusChanged(String provider, int status, Bundle extras) {}
-
-            public void onProviderEnabled(String provider) {}
-
-            public void onProviderDisabled(String provider) {}
-        };
-        if ( ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED ) {
-            System.out.println("Insufficient permissions");
-        }
-        // Register the listener with the Location Manager to receive location updates
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 900000, 20, locationListener);
-
+        getCallLogDetails();
     }
 
     private ArrayList<CallEntry> getCallLogDetails() {
