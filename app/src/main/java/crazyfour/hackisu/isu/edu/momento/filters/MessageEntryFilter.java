@@ -90,7 +90,7 @@ public class MessageEntryFilter {
                         event.setStartTime(new Date(currentDate));
                         event.setEndTime(new Date(currentDate));
                         event.setName("Conversation with " + currentName);
-                        event.setDesc(messageMap.get(currentName)+" messages");
+                        event.setDesc(messageMap.get(currentName)+" message(s)");
                         eventList.add(event);
                     }
 

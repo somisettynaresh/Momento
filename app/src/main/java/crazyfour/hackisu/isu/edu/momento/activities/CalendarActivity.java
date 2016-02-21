@@ -62,6 +62,7 @@ import crazyfour.hackisu.isu.edu.momento.R;
 import crazyfour.hackisu.isu.edu.momento.adapters.ActivityViewAdapter;
 import crazyfour.hackisu.isu.edu.momento.adapters.EventViewAdapter;
 import crazyfour.hackisu.isu.edu.momento.builders.EventBuilder;
+import crazyfour.hackisu.isu.edu.momento.builders.ReportBuilder;
 import crazyfour.hackisu.isu.edu.momento.constants.LocationConstants;
 import crazyfour.hackisu.isu.edu.momento.daos.EventBackupTimeDAO;
 import crazyfour.hackisu.isu.edu.momento.daos.EventEntryDAO;
@@ -70,6 +71,7 @@ import crazyfour.hackisu.isu.edu.momento.daos.LocationDataDAO;
 import crazyfour.hackisu.isu.edu.momento.filters.MessageEntryFilter;
 import crazyfour.hackisu.isu.edu.momento.models.CallEntry;
 import crazyfour.hackisu.isu.edu.momento.models.Event;
+import crazyfour.hackisu.isu.edu.momento.models.EventReport;
 import crazyfour.hackisu.isu.edu.momento.models.LocationData;
 import crazyfour.hackisu.isu.edu.momento.models.TextMessage;
 import crazyfour.hackisu.isu.edu.momento.utilities.DatabaseHelper;
@@ -169,6 +171,9 @@ public class CalendarActivity extends AppCompatActivity {
         };
         getSMSDetails();
         task.execute();
+        ReportBuilder reportBuilder = new ReportBuilder(new Date(0),getApplicationContext());
+        EventReport eventReport = reportBuilder.getWeeklyReport();
+        System.out.println(eventReport);
         //task.execute();
 
     }

@@ -76,6 +76,37 @@ public class EventEntryDAO {
         return eventList;
     }
 
+    public List<Event> getEventsByTypeAndStartDate(java.util.Date startDate, int eventType) throws ParseException {
+        List<Event> eventList = new ArrayList<Event>();
+
+        String[] projection = {"EVENT_NAME","EVENT_DESC","START_TIME","END_TIME","EVENT_TYPE","EVENT_COMMENT","EVENT_ATTACHMENT","EVENT_ID"};
+
+        String selection = "START_TIME >= ? AND EVENT_TYPE = ?";
+
+        java.util.Date endDate = new Date(startDate.getTime()+(24*3600*1000));
+
+        Cursor c = db.query("EVENT_ENTRY",projection,selection,new String[]{dateFormat.format(startDate),""+eventType},null,null,"START_TIME DESC");
+
+        boolean stat = c.moveToFirst();
+
+        while(stat) {
+            Event event = new Event();
+            event.setName(c.getString(0));
+            event.setDesc(c.getString(1));
+            event.setStartTime(dateFormat.parse(c.getString(2)));
+            event.setEndTime(dateFormat.parse(c.getString(3)));
+            event.setEventType(c.getInt(4));
+            event.setEventComment(c.getString(5));
+            event.setEventAttachment(c.getString(6));
+            event.setEventID(c.getInt(7));
+            eventList.add(event);
+
+            stat = c.moveToNext();
+        }
+        c.close();
+        return eventList;
+    }
+
     public List<Event> getEventListByNameAndDate(String name, java.util.Date startDate) throws ParseException {
         List<Event> eventList = new ArrayList<Event>();
 
