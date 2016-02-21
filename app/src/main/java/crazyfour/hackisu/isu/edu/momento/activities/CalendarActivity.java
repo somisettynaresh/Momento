@@ -25,6 +25,8 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.menu.MenuBuilder;
 import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ImageView;
@@ -124,12 +126,12 @@ public class CalendarActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-               Intent intent = new Intent(CalendarActivity.this, CreateEventActivity.class);
-               startActivity(intent);
+                Intent intent = new Intent(CalendarActivity.this, CreateEventActivity.class);
+                startActivity(intent);
             }
         });
         Intent intent = getIntent();
-        selectedDate = parse(intent.getLongExtra("dateSelected",0));
+        selectedDate = parse(intent.getLongExtra("dateSelected", 0));
         createEventsFromCallLogs();
         addMessageEvents(getSMSDetails());
         refreshActivity(selectedDate);
@@ -137,7 +139,7 @@ public class CalendarActivity extends AppCompatActivity {
     }
 
     private Date parse(long date) {
-        if(date == 0) {
+        if (date == 0) {
             return new Date(getToday());
         }
         return new Date(date);
@@ -180,7 +182,7 @@ public class CalendarActivity extends AppCompatActivity {
 
     private ArrayList<CallEntry> getCallLogDetails() {
         ArrayList<CallEntry> callEntries = new ArrayList<>();
-               String[] strFields = {
+        String[] strFields = {
                 android.provider.CallLog.Calls.NUMBER,
                 android.provider.CallLog.Calls.TYPE,
                 android.provider.CallLog.Calls.CACHED_NAME,
@@ -210,7 +212,7 @@ public class CalendarActivity extends AppCompatActivity {
         while (callLogCursor.moveToNext()) {
             String num = callLogCursor.getString(callLogCursor.getColumnIndex(CallLog.Calls.NUMBER));// for  number
             String name = callLogCursor.getString(callLogCursor.getColumnIndex(CallLog.Calls.CACHED_NAME));
-            if(name==null || name.equals("")){
+            if (name == null || name.equals("")) {
                 name = num;
             }// for name
             int duration = Integer.parseInt(callLogCursor.getString(callLogCursor.getColumnIndex(CallLog.Calls.DURATION)));// for duration
@@ -295,12 +297,18 @@ public class CalendarActivity extends AppCompatActivity {
                 // Called when a new location is found by the network location provider
                 startIntentService(location);
             }
-            public void onStatusChanged(String provider, int status, Bundle extras) {}
-            public void onProviderEnabled(String provider) {}
-            public void onProviderDisabled(String provider) {}
+
+            public void onStatusChanged(String provider, int status, Bundle extras) {
+            }
+
+            public void onProviderEnabled(String provider) {
+            }
+
+            public void onProviderDisabled(String provider) {
+            }
         };
-        if ( ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED ) {
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
             System.out.println("Insufficient permissions");
         }
         // Register the listener with the Location Manager to receive location updates
@@ -326,8 +334,7 @@ public class CalendarActivity extends AppCompatActivity {
 
         try {
             getDataFromApi();
-        }
-        catch (UserRecoverableAuthIOException e) {
+        } catch (UserRecoverableAuthIOException e) {
             startActivityForResult(e.getIntent(), 1001);
         } catch (IOException ioe) {
             System.out.println(ioe);
@@ -349,7 +356,7 @@ public class CalendarActivity extends AppCompatActivity {
         } catch (ParseException e) {
             e.printStackTrace();
         }
-        if(lastBackupTime != null) {
+        if (lastBackupTime != null) {
             startDate = new DateTime(lastBackupTime);
         }
         Events events = mService.events().list("primary")
@@ -373,7 +380,7 @@ public class CalendarActivity extends AppCompatActivity {
             EventEntryDAO eventEntryDAO = new EventEntryDAO(new DatabaseHelper(getApplicationContext()).getWritableDatabase());
             System.out.println("Event : " + eventEntryDAO.insert(event1));
         }
-        eventBackupTimeDAO.insert(3,new Date());
+        eventBackupTimeDAO.insert(3, new Date());
     }
 
     private DateTime getMidnightDateTime(int daysAfterToday) {
@@ -387,6 +394,7 @@ public class CalendarActivity extends AppCompatActivity {
         Date midnightYesterday = calendar.getTime();
         return new DateTime(midnightYesterday);
     }
+
     private String getContactName(Context context, String phoneNumber) {
         ContentResolver cr = context.getContentResolver();
         Uri uri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI,
@@ -421,7 +429,7 @@ public class CalendarActivity extends AppCompatActivity {
                 String number = cursor.getString(cursor.getColumnIndex("address"));
                 String date = cursor.getString(cursor.getColumnIndex("date"));
                 String contactName = getContactName(getApplicationContext(), number);
-                if(contactName == null){
+                if (contactName == null) {
                     contactName = number;
                 }
                 Date smsDayTime = new Date(Long.valueOf(date));
@@ -447,9 +455,9 @@ public class CalendarActivity extends AppCompatActivity {
                 } catch (ParseException e) {
                     e.printStackTrace();
                 }
-                System.out.println("SMSTime - "+smsDayTime+" last backup time - "+lastBackupTime);
-                if((typeOfSMS == "INBOX" || typeOfSMS == "SENT") && lastBackupTime!= null && smsDayTime.getTime() > lastBackupTime.getTime()){
-                    TextMessage message = new TextMessage(contactName,number,body,smsDayTime);
+                System.out.println("SMSTime - " + smsDayTime + " last backup time - " + lastBackupTime);
+                if ((typeOfSMS == "INBOX" || typeOfSMS == "SENT") && lastBackupTime != null && smsDayTime.getTime() > lastBackupTime.getTime()) {
+                    TextMessage message = new TextMessage(contactName, number, body, smsDayTime);
                     messageList.add(message);
                 }
                 cursor.moveToNext();
@@ -457,25 +465,51 @@ public class CalendarActivity extends AppCompatActivity {
         }
         dbHelper.close();
         cursor.close();
-        System.out.println("Size of messages - "+messageList.size());
+        System.out.println("Size of messages - " + messageList.size());
         return messageList;
     }
 
-    private void addMessageEvents(List<TextMessage> messageList){
+    private void addMessageEvents(List<TextMessage> messageList) {
         DatabaseHelper dbHelper = new DatabaseHelper(getApplicationContext());
         SQLiteDatabase writableDB = dbHelper.getWritableDatabase();
         EventEntryDAO eventDAO = new EventEntryDAO(writableDB);
         List<Event> eventList = MessageEntryFilter.filterMessagesByDay(messageList, getApplicationContext());
 
-        for(Event event : eventList){
+        for (Event event : eventList) {
             eventDAO.insert(event);
         }
-        if(eventList.size() >0){
+        if (eventList.size() > 0) {
             EventBackupTimeDAO eventBackupTimeDAO = new EventBackupTimeDAO(writableDB);
             eventBackupTimeDAO.insert(5, new Date(System.currentTimeMillis()));
         }
         dbHelper.close();
 
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_home, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+        if (id == R.id.action_stats) {
+            Intent homeIntent = new Intent(CalendarActivity.this, StatsActivity.class);
+            startActivity(homeIntent);
+        } else if (id == R.id.action_home) {
+            Intent homeIntent = new Intent(CalendarActivity.this, CalendarActivity.class);
+            startActivity(homeIntent);
+        } else if (id == R.id.action_selectDate) {
+            Intent homeIntent = new Intent(CalendarActivity.this, SelectDateActivity.class);
+            startActivity(homeIntent);
+        }
+        return super.onOptionsItemSelected(item);
     }
 
 
@@ -487,12 +521,12 @@ public class CalendarActivity extends AppCompatActivity {
         @Override
         protected void onReceiveResult(int resultCode, Bundle resultData) {
             String message = resultData.getString(LocationConstants.RESULT_DATA_KEY);
-            if(resultCode == LocationConstants.SUCCESS_RESULT) {
+            if (resultCode == LocationConstants.SUCCESS_RESULT) {
                 DatabaseHelper dbHelper = new DatabaseHelper(getApplicationContext());
                 LocationDataDAO locationDataDAO = new LocationDataDAO(dbHelper.getWritableDatabase());
                 LocationData locationData = locationDataDAO.getLastLocation();
-                if(locationData != null) {
-                    Event event = EventBuilder.from(locationData,new Date(System.currentTimeMillis()));
+                if (locationData != null) {
+                    Event event = EventBuilder.from(locationData, new Date(System.currentTimeMillis()));
                     EventEntryDAO eventEntryDAO = new EventEntryDAO(dbHelper.getWritableDatabase());
                     System.out.println("Event : " + eventEntryDAO.insert(event));
                 }

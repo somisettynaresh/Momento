@@ -58,7 +58,12 @@
             android:label="@string/title_activity_event_details"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity android:name=".activities.SelectDateActivity" />
-        <activity android:name=".activities.CreateEventActivity"></activity>
+        <activity android:name=".activities.CreateEventActivity" />
+        <activity android:name=".activities.StatsActivity" />
+        <activity
+            android:name=".activities.StatisticsActivity"
+            android:label="@string/title_activity_statistics"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>
 
 </manifest>

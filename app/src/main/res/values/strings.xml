@@ -93,4 +93,5 @@
     <string name="title_activity_calendar">CalendarActivity</string>
     <string name="google_app_id">default-demo-app-6e470</string>
     <string name="title_activity_event_details">EventDetailsActivity</string>
+    <string name="title_activity_statistics">StatisticsActivity</string>
 </resources>
