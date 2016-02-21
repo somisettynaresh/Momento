@@ -52,7 +52,7 @@ public class EventEntryDAO {
 
         String selection = "START_TIME > ?";
 
-        Cursor c = db.query("EVENT_ENTRY",projection,selection,new String[]{dateFormat.format(startDate)},null,null,null);
+        Cursor c = db.query("EVENT_ENTRY",projection,selection,new String[]{dateFormat.format(startDate)},null,null,"START_TIME DESC");
 
         boolean stat = c.moveToFirst();
 
