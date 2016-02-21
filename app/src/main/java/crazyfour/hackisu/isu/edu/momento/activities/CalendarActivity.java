@@ -230,7 +230,7 @@ public class CalendarActivity extends AppCompatActivity {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(today);
         calendar.set(Calendar.HOUR_OF_DAY, 0);
-        calendar.set(Calendar.MINUTE,0);
+        calendar.set(Calendar.MINUTE, 0);
         calendar.set(Calendar.SECOND, 0);
         return calendar.getTimeInMillis();
     }
@@ -327,38 +327,40 @@ public class CalendarActivity extends AppCompatActivity {
         // List the next 10 events from the primary calendar.
         DateTime now = new DateTime(System.currentTimeMillis());
         DateTime startDate = getMidnightDateTime(0);
-        DateTime endDate = getMidnightDateTime(1);
+        DateTime endDate = new DateTime(System.currentTimeMillis());
         List<String> eventStrings = new ArrayList<String>();
         EventBackupTimeDAO eventBackupTimeDAO = new EventBackupTimeDAO(dbHelper.getReadableDatabase());
-        Date lastBackupTime = new Date(getToday());
+        Date lastBackupTime = null;
         try {
             lastBackupTime = eventBackupTimeDAO.getLastBackupTime(3);
         } catch (ParseException e) {
             e.printStackTrace();
         }
-        if(lastBackupTime.before(new Date())) {
-            Events events = mService.events().list("primary")
-                    .setTimeMin(startDate)
-                    .setTimeMax(endDate)
-                    .setOrderBy("startTime")
-                    .setSingleEvents(true)
-                    .execute();
-
-            for (com.google.api.services.calendar.model.Event event : events.getItems()) {
-                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
-                Date eventStartDate = null;
-                Date eventEndDate = null;
-                try {
-                    eventStartDate = dateFormat.parse(event.getStart().getDateTime().toString());
-                    eventEndDate = dateFormat.parse(event.getEnd().getDateTime().toString());
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
-                Event event1 = EventBuilder.buildCalendarEvent(event.getDescription(), eventStartDate, eventEndDate);
-                EventEntryDAO eventEntryDAO = new EventEntryDAO(new DatabaseHelper(getApplicationContext()).getWritableDatabase());
-                System.out.println("Event : " + eventEntryDAO.insert(event1));
-            }
+        if(lastBackupTime != null) {
+            startDate = new DateTime(lastBackupTime);
         }
+        Events events = mService.events().list("primary")
+                .setTimeMin(startDate)
+                .setTimeMax(endDate)
+                .setOrderBy("startTime")
+                .setSingleEvents(true)
+                .execute();
+
+        for (com.google.api.services.calendar.model.Event event : events.getItems()) {
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+            Date eventStartDate = null;
+            Date eventEndDate = null;
+            try {
+                eventStartDate = dateFormat.parse(event.getStart().getDateTime().toString());
+                eventEndDate = dateFormat.parse(event.getEnd().getDateTime().toString());
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+            Event event1 = EventBuilder.buildCalendarEvent(event.getSummary(), eventStartDate, eventEndDate);
+            EventEntryDAO eventEntryDAO = new EventEntryDAO(new DatabaseHelper(getApplicationContext()).getWritableDatabase());
+            System.out.println("Event : " + eventEntryDAO.insert(event1));
+        }
+        eventBackupTimeDAO.insert(3,new Date());
     }
 
     private DateTime getMidnightDateTime(int daysAfterToday) {

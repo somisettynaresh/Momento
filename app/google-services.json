@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_id": "default-demo-app-6e470",
-    "project_number": "562851533933",
+    "project_id": "default-demo-app-7a247",
+    "project_number": "57109608918",
     "name": "Default Demo App"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:562851533933:android:27d689d63f1b7a06",
+        "mobilesdk_app_id": "1:57109608918:android:27d689d63f1b7a06",
         "client_id": "android:com.google.samples.quickstart.signin",
         "client_type": 1,
         "android_client_info": {
