@@ -25,6 +25,7 @@ public class EventDetailsActivity extends AppCompatActivity {
     TextView activity_name_text_view;
     TextView activity_desc_text_view;
     TextView activity_date_text_view;
+    Toolbar toolbar;
 
     Button record,save,stop,play,cancel;
     private MediaRecorder myAudioRecorder;
@@ -36,7 +37,8 @@ public class EventDetailsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_event_details);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        populateData();
         setSupportActionBar(toolbar);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
@@ -49,6 +51,11 @@ public class EventDetailsActivity extends AppCompatActivity {
         });
         populateData();
 
+        setupAudioRecorder();
+
+    }
+
+    private void setupAudioRecorder() {
         record = (Button)findViewById(R.id.button);
         stop = (Button)findViewById(R.id.button3);
         save = (Button)findViewById(R.id.button2);
@@ -147,20 +154,21 @@ public class EventDetailsActivity extends AppCompatActivity {
                 Toast.makeText(getApplicationContext(), "Playing audio", Toast.LENGTH_LONG).show();
             }
         });
-
     }
 
     private void populateData() {
         Intent i = getIntent();
-        Event activity = (Event)i.getSerializableExtra("activity");
-        activity_name_text_view = (TextView) findViewById(R.id.activity_details_name);
+        Event activity = (Event) i.getSerializableExtra("activity");
+
+        //activity_name_text_view = (TextView) findViewById(R.id.activity_details_name);
         activity_desc_text_view = (TextView) findViewById(R.id.activity_details_desc);
         activity_date_text_view = (TextView) findViewById(R.id.activity_details_date);
-        activity_name_text_view.setText(activity.getName());
+        //activity_name_text_view.setText(activity.getName());
         activity_desc_text_view.setText(activity.getDesc());
+        toolbar.setTitle(activity.getName());
         DateFormat dateFormat = new SimpleDateFormat("hh:mm a");
-        String startTime=dateFormat.format(activity.getStartTime());
-        String endTime=dateFormat.format(activity.getEndTime());
+        String startTime = dateFormat.format(activity.getStartTime());
+        String endTime = dateFormat.format(activity.getEndTime());
         activity_date_text_view.setText(startTime + " - " + endTime);
 
     }

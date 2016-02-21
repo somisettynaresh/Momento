@@ -26,6 +26,7 @@ import android.support.v7.view.menu.MenuBuilder;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -75,6 +76,7 @@ public class CalendarActivity extends AppCompatActivity {
     private static final String PREF_ACCOUNT_NAME = "accountName";
     private static final String[] SCOPES = {CalendarScopes.CALENDAR_READONLY};
     private AddressResultReceiver mResultReceiver = new AddressResultReceiver(new Handler());
+    private Date selectedDate = new Date();
 
     protected void startIntentService(Location mLastLocation) {
         Intent intent = new Intent(this, FetchAddressIntentService.class);
@@ -83,65 +85,15 @@ public class CalendarActivity extends AppCompatActivity {
         startService(intent);
     }
 
-    class AddressResultReceiver extends ResultReceiver {
-        public AddressResultReceiver(Handler handler) {
-            super(handler);
-        }
-
-        @Override
-        protected void onReceiveResult(int resultCode, Bundle resultData) {
-            String message = resultData.getString(LocationConstants.RESULT_DATA_KEY);
-            if(resultCode == LocationConstants.SUCCESS_RESULT) {
-                DatabaseHelper dbHelper = new DatabaseHelper(getApplicationContext());
-                LocationDataDAO locationDataDAO = new LocationDataDAO(dbHelper.getWritableDatabase());
-                LocationData locationData = locationDataDAO.getLastLocation();
-                if(locationData != null) {
-                    Event event = EventBuilder.from(locationData,new Date(System.currentTimeMillis()));
-                    EventEntryDAO eventEntryDAO = new EventEntryDAO(dbHelper.getWritableDatabase());
-                    System.out.println("Event : " + eventEntryDAO.insert(event));
-                }
-                System.out.println("Location : " + locationDataDAO.insert(
-                        new LocationData(message, new Date(System.currentTimeMillis()))));
-                dbHelper.close();
-            } else {
-                System.out.println(message);
-            }
-        }
-    }
-
-    private void getLocationAndAddress() {
-        LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-        // Define a listener that responds to location updates
-        LocationListener locationListener = new LocationListener() {
-            public void onLocationChanged(Location location) {
-                System.out.println("Starting Intent Service");
-                // Called when a new location is found by the network location provider
-                startIntentService(location);
-            }
-            public void onStatusChanged(String provider, int status, Bundle extras) {}
-            public void onProviderEnabled(String provider) {}
-            public void onProviderDisabled(String provider) {}
-        };
-        if ( ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED ) {
-            System.out.println("Insufficient permissions");
-        }
-        // Register the listener with the Location Manager to receive location updates
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-                LocationConstants.MIN_LOCATION_UPDATE_TIME,
-                LocationConstants.MIN_LOCATION_UPDATE_DISTANCE, locationListener);
-    }
-
     @Override
     protected void onResume() {
         super.onResume();
-        refreshActivity();
+        refreshActivity(this.selectedDate);
     }
 
     private void updateActivityCount(int count, String date) {
         final TextView countHeader = (TextView) findViewById(R.id.activities_count_header);
         countHeader.setText(count + " activities on " + date);
-
     }
 
     @Override
@@ -152,6 +104,14 @@ public class CalendarActivity extends AppCompatActivity {
         toolbar.setTitle("Moments");
         setSupportActionBar(toolbar);
 
+        ImageView calendarIcon = (ImageView) findViewById(R.id.calendarView);
+        calendarIcon.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent calendarIntent = new Intent(CalendarActivity.this, SelectDateActivity.class);
+                startActivity(calendarIntent);
+            }
+        });
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -160,14 +120,22 @@ public class CalendarActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
-
-        refreshActivity();
+        Intent intent = getIntent();
+        selectedDate = parse(intent.getLongExtra("dateSelected",0));
+        createEventsFromCallLogs();
+        refreshActivity(selectedDate);
         getLocationAndAddress();
     }
 
-    private void refreshActivity() {
-        createEventsFromCallLogs();
-        ArrayList<Event> events = GetEvents(new Date(getToday()));
+    private Date parse(long date) {
+        if(date == 0) {
+            return new Date(getToday());
+        }
+        return new Date(date);
+    }
+
+    private void refreshActivity(Date selectedDate) {
+        ArrayList<Event> events = GetEvents(selectedDate);
 
         final ListView lv = (ListView) findViewById(R.id.srListView);
         lv.setAdapter(new EventViewAdapter(this, events));
@@ -254,18 +222,21 @@ public class CalendarActivity extends AppCompatActivity {
     public static Long getToday() {
         Date today = new Date();
         Calendar calendar = Calendar.getInstance();
-        calendar.set(today.getYear(), today.getMonth(), today.getDate());
+        calendar.setTime(today);
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE,0);
+        calendar.set(Calendar.SECOND, 0);
         return calendar.getTimeInMillis();
     }
 
     private String formatDate(Date date) {
         Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
         SimpleDateFormat sdf = new SimpleDateFormat("dd-MMM-yyyy");
         return sdf.format(calendar.getTime());
     }
 
     private void createEventsFromCallLogs() {
-        ArrayList<Event> events = new ArrayList<>();
         ArrayList<CallEntry> callEntries = CallEntrytFilter.filterByDuration(getCallLogDetails());
         DatabaseHelper dbHelper = new DatabaseHelper(getApplicationContext());
         EventEntryDAO eventEntryDAO = new EventEntryDAO(dbHelper.getWritableDatabase());
@@ -295,6 +266,30 @@ public class CalendarActivity extends AppCompatActivity {
         updateActivityCount(events.size(), formatDate(forDate));
         return events;
     }
+
+    private void getLocationAndAddress() {
+        LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        // Define a listener that responds to location updates
+        LocationListener locationListener = new LocationListener() {
+            public void onLocationChanged(Location location) {
+                System.out.println("Starting Intent Service");
+                // Called when a new location is found by the network location provider
+                startIntentService(location);
+            }
+            public void onStatusChanged(String provider, int status, Bundle extras) {}
+            public void onProviderEnabled(String provider) {}
+            public void onProviderDisabled(String provider) {}
+        };
+        if ( ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED ) {
+            System.out.println("Insufficient permissions");
+        }
+        // Register the listener with the Location Manager to receive location updates
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+                LocationConstants.MIN_LOCATION_UPDATE_TIME,
+                LocationConstants.MIN_LOCATION_UPDATE_DISTANCE, locationListener);
+    }
+
 
     private void calendarSync() {
         //calendar API call
@@ -347,6 +342,25 @@ public class CalendarActivity extends AppCompatActivity {
         }
         return eventStrings;
     }
+    private String getContactName(Context context, String phoneNumber) {
+        ContentResolver cr = context.getContentResolver();
+        Uri uri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI,
+                Uri.encode(phoneNumber));
+        Cursor cursor = cr.query(uri,
+                new String[]{ContactsContract.PhoneLookup.DISPLAY_NAME}, null, null, null);
+        if (cursor == null) {
+            return null;
+        }
+        String contactName = null;
+        if (cursor.moveToFirst()) {
+            contactName = cursor.getString(cursor
+                    .getColumnIndex(ContactsContract.PhoneLookup.DISPLAY_NAME));
+        }
+        if (cursor != null && !cursor.isClosed()) {
+            cursor.close();
+        }
+        return contactName;
+    }
 
     private List<TextMessage> getSMSDetails() {
 
@@ -388,24 +402,29 @@ public class CalendarActivity extends AppCompatActivity {
         return messageList;
     }
 
-    private String getContactName(Context context, String phoneNumber) {
-        ContentResolver cr = context.getContentResolver();
-        Uri uri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI,
-                Uri.encode(phoneNumber));
-        Cursor cursor = cr.query(uri,
-                new String[]{ContactsContract.PhoneLookup.DISPLAY_NAME}, null, null, null);
-        if (cursor == null) {
-            return null;
+    class AddressResultReceiver extends ResultReceiver {
+        public AddressResultReceiver(Handler handler) {
+            super(handler);
         }
-        String contactName = null;
-        if (cursor.moveToFirst()) {
-            contactName = cursor.getString(cursor
-                    .getColumnIndex(ContactsContract.PhoneLookup.DISPLAY_NAME));
-        }
-        if (cursor != null && !cursor.isClosed()) {
-            cursor.close();
-        }
-        return contactName;
-    }
 
+        @Override
+        protected void onReceiveResult(int resultCode, Bundle resultData) {
+            String message = resultData.getString(LocationConstants.RESULT_DATA_KEY);
+            if(resultCode == LocationConstants.SUCCESS_RESULT) {
+                DatabaseHelper dbHelper = new DatabaseHelper(getApplicationContext());
+                LocationDataDAO locationDataDAO = new LocationDataDAO(dbHelper.getWritableDatabase());
+                LocationData locationData = locationDataDAO.getLastLocation();
+                if(locationData != null) {
+                    Event event = EventBuilder.from(locationData,new Date(System.currentTimeMillis()));
+                    EventEntryDAO eventEntryDAO = new EventEntryDAO(dbHelper.getWritableDatabase());
+                    System.out.println("Event : " + eventEntryDAO.insert(event));
+                }
+                System.out.println("Location : " + locationDataDAO.insert(
+                        new LocationData(message, new Date(System.currentTimeMillis()))));
+                dbHelper.close();
+            } else {
+                System.out.println(message);
+            }
+        }
+    }
 }
