@@ -56,7 +56,7 @@ public class EventBackupTimeDAO {
             calendar.add(Calendar.DAY_OF_MONTH, -1);
             lastBackupTime =calendar.getTime();
         }
-
+        c.close();
         return lastBackupTime;
     }
 }

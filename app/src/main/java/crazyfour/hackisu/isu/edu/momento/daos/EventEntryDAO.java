@@ -73,7 +73,7 @@ public class EventEntryDAO {
 
             stat = c.moveToNext();
         }
-
+        c.close();
         return eventList;
     }
 }

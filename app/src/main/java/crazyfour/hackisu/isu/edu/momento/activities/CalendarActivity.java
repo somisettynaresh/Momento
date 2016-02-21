@@ -45,6 +45,7 @@ import com.telerik.widget.list.RadListView;
 
 import java.io.IOException;
 
+import java.text.DateFormat;
 import java.text.ParseException;
 
 import java.text.SimpleDateFormat;
@@ -52,6 +53,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 import crazyfour.hackisu.isu.edu.momento.FetchAddressIntentService;
@@ -162,7 +164,7 @@ public class CalendarActivity extends AppCompatActivity {
             }
         };
         getSMSDetails();
-        //task.execute();
+        task.execute();
     }
 
     private ArrayList<CallEntry> getCallLogDetails() {
@@ -216,6 +218,7 @@ public class CalendarActivity extends AppCompatActivity {
                 callEntries.add(new CallEntry(name, dateOfCall.getTime(), duration, num, type));
                 System.out.println("Call to " + name + " number:  " + num + " for " + duration + " mins");
             }
+            callLogCursor.close();
             dbHelper.close();
         }
         System.out.println("Size of the call Entries " + callEntries.size());
@@ -302,18 +305,16 @@ public class CalendarActivity extends AppCompatActivity {
         mCredential = GoogleAccountCredential.usingOAuth2(
                 getApplicationContext(), Arrays.asList(SCOPES))
                 .setBackOff(new ExponentialBackOff())
-                .setSelectedAccountName(settings.getString(PREF_ACCOUNT_NAME, "nishanth.ralph@gmail.com"));
+                .setSelectedAccountName(settings.getString(PREF_ACCOUNT_NAME, "sri.007.ram@gmail.com"));
         mService = new com.google.api.services.calendar.Calendar.Builder(
                 transport, jsonFactory, mCredential)
                 .setApplicationName("Google Calendar API Android Quickstart")
                 .build();
 
         try {
-            List<String> event_list = getDataFromApi();
-            for (String s : event_list) {
-                System.out.println(s);
-            }
-        } catch (UserRecoverableAuthIOException e) {
+            getDataFromApi();
+        }
+        catch (UserRecoverableAuthIOException e) {
             startActivityForResult(e.getIntent(), 1001);
         } catch (IOException ioe) {
             System.out.println(ioe);
@@ -321,29 +322,55 @@ public class CalendarActivity extends AppCompatActivity {
 
     }
 
-    private List<String> getDataFromApi() throws IOException {
+    private void getDataFromApi() throws IOException {
+        DatabaseHelper dbHelper = new DatabaseHelper(getApplicationContext());
         // List the next 10 events from the primary calendar.
         DateTime now = new DateTime(System.currentTimeMillis());
+        DateTime startDate = getMidnightDateTime(0);
+        DateTime endDate = getMidnightDateTime(1);
         List<String> eventStrings = new ArrayList<String>();
-        Events events = mService.events().list("primary")
-                .setMaxResults(10)
-                .setTimeMin(now)
-                .setOrderBy("startTime")
-                .setSingleEvents(true)
-                .execute();
-        List<com.google.api.services.calendar.model.Event> items = events.getItems();
-
-        for (com.google.api.services.calendar.model.Event event : items) {
-            DateTime start = event.getStart().getDateTime();
-            if (start == null) {
-                // All-day events don't have start times, so just use
-                // the start date.
-                start = event.getStart().getDate();
-            }
-            eventStrings.add(
-                    String.format("%s (%s)", event.getSummary(), start));
+        EventBackupTimeDAO eventBackupTimeDAO = new EventBackupTimeDAO(dbHelper.getReadableDatabase());
+        Date lastBackupTime = new Date(getToday());
+        try {
+            lastBackupTime = eventBackupTimeDAO.getLastBackupTime(3);
+        } catch (ParseException e) {
+            e.printStackTrace();
         }
-        return eventStrings;
+        if(lastBackupTime.before(new Date())) {
+            Events events = mService.events().list("primary")
+                    .setTimeMin(startDate)
+                    .setTimeMax(endDate)
+                    .setOrderBy("startTime")
+                    .setSingleEvents(true)
+                    .execute();
+
+            for (com.google.api.services.calendar.model.Event event : events.getItems()) {
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+                Date eventStartDate = null;
+                Date eventEndDate = null;
+                try {
+                    eventStartDate = dateFormat.parse(event.getStart().getDateTime().toString());
+                    eventEndDate = dateFormat.parse(event.getEnd().getDateTime().toString());
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+                Event event1 = EventBuilder.buildCalendarEvent(event.getDescription(), eventStartDate, eventEndDate);
+                EventEntryDAO eventEntryDAO = new EventEntryDAO(new DatabaseHelper(getApplicationContext()).getWritableDatabase());
+                System.out.println("Event : " + eventEntryDAO.insert(event1));
+            }
+        }
+    }
+
+    private DateTime getMidnightDateTime(int daysAfterToday) {
+        java.util.Calendar calendar = new GregorianCalendar();
+        calendar.setTime(new Date());
+        calendar.set(java.util.Calendar.DAY_OF_YEAR, calendar.get(java.util.Calendar.DAY_OF_YEAR) + daysAfterToday);
+        calendar.set(java.util.Calendar.HOUR_OF_DAY, 0);
+        calendar.set(java.util.Calendar.MINUTE, 0);
+        calendar.set(java.util.Calendar.SECOND, 0);
+        calendar.set(java.util.Calendar.MILLISECOND, 0);
+        Date midnightYesterday = calendar.getTime();
+        return new DateTime(midnightYesterday);
     }
     private String getContactName(Context context, String phoneNumber) {
         ContentResolver cr = context.getContentResolver();

@@ -19,4 +19,8 @@ public class EventBuilder {
     public static Event from(LocationData locationData, Date endDate) {
         return new Event("Location Event",locationData.getFeatureName(), locationData.getLocationDate(), endDate, 2);
     }
+
+    public static Event buildCalendarEvent(String description, Date startDate, Date endDate ) {
+        return new Event("Calendar Event",description, startDate, endDate, 3);
+    }
 }
