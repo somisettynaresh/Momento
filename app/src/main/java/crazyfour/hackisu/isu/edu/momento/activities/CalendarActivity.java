@@ -48,6 +48,7 @@ import crazyfour.hackisu.isu.edu.momento.adapters.EventViewAdapter;
 import crazyfour.hackisu.isu.edu.momento.builders.EventBuilder;
 import crazyfour.hackisu.isu.edu.momento.daos.EventBackupTimeDAO;
 import crazyfour.hackisu.isu.edu.momento.daos.EventEntryDAO;
+import crazyfour.hackisu.isu.edu.momento.filters.CallEntrytFilter;
 import crazyfour.hackisu.isu.edu.momento.models.CallEntry;
 import crazyfour.hackisu.isu.edu.momento.models.Event;
 import crazyfour.hackisu.isu.edu.momento.utilities.DatabaseHelper;
@@ -84,6 +85,7 @@ public class CalendarActivity extends AppCompatActivity {
 
     }
 
+
     private void refreshActivity(){
         createEventsFromCallLogs();
         ArrayList<Event> events = GetEvents();
@@ -98,7 +100,7 @@ public class CalendarActivity extends AppCompatActivity {
                 Object o = lv.getItemAtPosition(position);
                 Event activity = (Event) o;
                 Intent intent = new Intent(CalendarActivity.this, EventDetailsActivity.class);
-                intent.putExtra("activity",activity);
+                intent.putExtra("activity", activity);
                 startActivity(intent);
                 Toast.makeText(CalendarActivity.this, "You have chosen: " + " " + activity.getName(), Toast.LENGTH_LONG).show();
             }
@@ -194,7 +196,7 @@ public class CalendarActivity extends AppCompatActivity {
 
     private void createEventsFromCallLogs() {
         ArrayList<Event> events = new ArrayList<>();
-        ArrayList<CallEntry> callEntries = getCallLogDetails();
+        ArrayList<CallEntry> callEntries = CallEntrytFilter.filterByDuration(getCallLogDetails());
         DatabaseHelper dbHelper = new DatabaseHelper(getApplicationContext());
         EventEntryDAO eventEntryDAO = new EventEntryDAO(dbHelper.getWritableDatabase());
         EventBackupTimeDAO eventBackupTimeDAO = new EventBackupTimeDAO(dbHelper.getReadableDatabase());
