@@ -195,7 +195,10 @@ public class CalendarActivity extends AppCompatActivity {
         );
         while (callLogCursor.moveToNext()) {
             String num = callLogCursor.getString(callLogCursor.getColumnIndex(CallLog.Calls.NUMBER));// for  number
-            String name = callLogCursor.getString(callLogCursor.getColumnIndex(CallLog.Calls.CACHED_NAME));// for name
+            String name = callLogCursor.getString(callLogCursor.getColumnIndex(CallLog.Calls.CACHED_NAME));
+            if(name==null || name.equals("")){
+                name = num;
+            }// for name
             int duration = Integer.parseInt(callLogCursor.getString(callLogCursor.getColumnIndex(CallLog.Calls.DURATION)));// for duration
             int type = Integer.parseInt(callLogCursor.getString(callLogCursor.getColumnIndex(CallLog.Calls.TYPE)));
             Calendar dateOfCall = Calendar.getInstance();
