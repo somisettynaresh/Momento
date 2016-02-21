@@ -202,6 +202,7 @@ public class CalendarActivity extends AppCompatActivity {
                 mSelectionArgs,
                 null
         );
+        DatabaseHelper dbHelper = new DatabaseHelper(getApplicationContext());
         while (callLogCursor.moveToNext()) {
             String num = callLogCursor.getString(callLogCursor.getColumnIndex(CallLog.Calls.NUMBER));// for  number
             String name = callLogCursor.getString(callLogCursor.getColumnIndex(CallLog.Calls.CACHED_NAME));
@@ -213,7 +214,7 @@ public class CalendarActivity extends AppCompatActivity {
             Calendar dateOfCall = Calendar.getInstance();
             dateOfCall.setTimeInMillis(Long.parseLong(callLogCursor.getString(callLogCursor.getColumnIndex(CallLog.Calls.DATE))));
             //filter call logs based on last backup time stamp
-            DatabaseHelper dbHelper = new DatabaseHelper(getApplicationContext());
+
             EventBackupTimeDAO eventBackupTimeDAO = new EventBackupTimeDAO(dbHelper.getReadableDatabase());
             Date lastBackupTime = new Date(getToday());
             try {
@@ -225,9 +226,10 @@ public class CalendarActivity extends AppCompatActivity {
                 callEntries.add(new CallEntry(name, dateOfCall.getTime(), duration, num, type));
                 System.out.println("Call to " + name + " number:  " + num + " for " + duration + " mins");
             }
-            callLogCursor.close();
-            dbHelper.close();
+
         }
+        callLogCursor.close();
+        dbHelper.close();
         System.out.println("Size of the call Entries " + callEntries.size());
         return callEntries;
     }
@@ -312,7 +314,7 @@ public class CalendarActivity extends AppCompatActivity {
         mCredential = GoogleAccountCredential.usingOAuth2(
                 getApplicationContext(), Arrays.asList(SCOPES))
                 .setBackOff(new ExponentialBackOff())
-                .setSelectedAccountName(settings.getString(PREF_ACCOUNT_NAME, "sri.007.ram@gmail.com"));
+                .setSelectedAccountName(settings.getString(PREF_ACCOUNT_NAME, "nishanth.ralph@gmail.com"));
         mService = new com.google.api.services.calendar.Calendar.Builder(
                 transport, jsonFactory, mCredential)
                 .setApplicationName("Google Calendar API Android Quickstart")
