@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -66,6 +67,7 @@ import crazyfour.hackisu.isu.edu.momento.daos.EventBackupTimeDAO;
 import crazyfour.hackisu.isu.edu.momento.daos.EventEntryDAO;
 import crazyfour.hackisu.isu.edu.momento.filters.CallEntrytFilter;
 import crazyfour.hackisu.isu.edu.momento.daos.LocationDataDAO;
+import crazyfour.hackisu.isu.edu.momento.filters.MessageEntryFilter;
 import crazyfour.hackisu.isu.edu.momento.models.CallEntry;
 import crazyfour.hackisu.isu.edu.momento.models.Event;
 import crazyfour.hackisu.isu.edu.momento.models.LocationData;
@@ -90,6 +92,8 @@ public class CalendarActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        createEventsFromCallLogs();
+        addMessageEvents(getSMSDetails());
         refreshActivity(this.selectedDate);
     }
 
@@ -125,6 +129,7 @@ public class CalendarActivity extends AppCompatActivity {
         Intent intent = getIntent();
         selectedDate = parse(intent.getLongExtra("dateSelected",0));
         createEventsFromCallLogs();
+        addMessageEvents(getSMSDetails());
         refreshActivity(selectedDate);
         getLocationAndAddress();
     }
@@ -165,6 +170,8 @@ public class CalendarActivity extends AppCompatActivity {
         };
         getSMSDetails();
         task.execute();
+        //task.execute();
+
     }
 
     private ArrayList<CallEntry> getCallLogDetails() {
@@ -398,15 +405,19 @@ public class CalendarActivity extends AppCompatActivity {
 
         List<TextMessage> messageList = new ArrayList<TextMessage>();
         Uri uri = Uri.parse("content://sms");
-        String selection = "date >= ?";
-        Cursor cursor = getContentResolver().query(uri, null, selection, new String[]{""+getToday()}, null);
-
+        String selection = "date";
+        Cursor cursor = getContentResolver().query(uri, null, null, null, null);
+        DatabaseHelper dbHelper = new DatabaseHelper(getApplicationContext());
+        EventBackupTimeDAO eventBackupTimeDAO = new EventBackupTimeDAO(dbHelper.getReadableDatabase());
         if (cursor.moveToFirst()) {
             for (int i = 0; i < cursor.getCount(); i++) {
                 String body = cursor.getString(cursor.getColumnIndex("body"));
                 String number = cursor.getString(cursor.getColumnIndex("address"));
                 String date = cursor.getString(cursor.getColumnIndex("date"));
-                String contactName = getContactName(getApplicationContext(),number);
+                String contactName = getContactName(getApplicationContext(), number);
+                if(contactName == null){
+                    contactName = number;
+                }
                 Date smsDayTime = new Date(Long.valueOf(date));
                 String type = cursor.getString(cursor.getColumnIndex("type"));
                 String typeOfSMS = null;
@@ -423,16 +434,44 @@ public class CalendarActivity extends AppCompatActivity {
                         typeOfSMS = "DRAFT";
                         break;
                 }
-                if(typeOfSMS == "INBOX" || typeOfSMS == "SENT"){
+
+                Date lastBackupTime = new Date(getToday());
+                try {
+                    lastBackupTime = eventBackupTimeDAO.getLastBackupTime(5);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+                System.out.println("SMSTime - "+smsDayTime+" last backup time - "+lastBackupTime);
+                if((typeOfSMS == "INBOX" || typeOfSMS == "SENT") && (smsDayTime.getTime() > lastBackupTime.getTime())){
                     TextMessage message = new TextMessage(contactName,number,body,smsDayTime);
                     messageList.add(message);
                 }
                 cursor.moveToNext();
             }
         }
+        dbHelper.close();
         cursor.close();
+        System.out.println("Size of messages - "+messageList.size());
         return messageList;
     }
+
+    private void addMessageEvents(List<TextMessage> messageList){
+        DatabaseHelper dbHelper = new DatabaseHelper(getApplicationContext());
+        SQLiteDatabase writableDB = dbHelper.getWritableDatabase();
+        EventEntryDAO eventDAO = new EventEntryDAO(writableDB);
+        List<Event> eventList = MessageEntryFilter.filterMessagesByDay(messageList, getApplicationContext());
+
+        for(Event event : eventList){
+            eventDAO.insert(event);
+        }
+        if(eventList.size() >0){
+            EventBackupTimeDAO eventBackupTimeDAO = new EventBackupTimeDAO(writableDB);
+            eventBackupTimeDAO.insert(5, new Date(System.currentTimeMillis()));
+        }
+        dbHelper.close();
+
+    }
+
 
     class AddressResultReceiver extends ResultReceiver {
         public AddressResultReceiver(Handler handler) {
