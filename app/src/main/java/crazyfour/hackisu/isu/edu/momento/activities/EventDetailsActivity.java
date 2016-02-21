@@ -26,7 +26,7 @@ public class EventDetailsActivity extends AppCompatActivity {
     TextView activity_desc_text_view;
     TextView activity_date_text_view;
 
-    Button record,save;
+    Button record,save,stop,play,cancel;
     private MediaRecorder myAudioRecorder;
     private String outputFile = null;
 
@@ -50,8 +50,13 @@ public class EventDetailsActivity extends AppCompatActivity {
         populateData();
 
         record = (Button)findViewById(R.id.button);
+        stop = (Button)findViewById(R.id.button3);
         save = (Button)findViewById(R.id.button2);
+        play = (Button)findViewById(R.id.button4);
+        cancel = (Button)findViewById(R.id.button5);
         save.setEnabled(false);
+        cancel.setEnabled(false);
+
         outputFile = Environment.getExternalStorageDirectory().getAbsolutePath() + "/recording_.3gp";
 
         myAudioRecorder=new MediaRecorder();
@@ -64,53 +69,82 @@ public class EventDetailsActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                if (counter == 0) {
-
-                    try {
-                        myAudioRecorder.prepare();
-                        myAudioRecorder.start();
-                    } catch (IllegalStateException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    } catch (IOException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
-
-
-                    Toast.makeText(getApplicationContext(), "Recording started", Toast.LENGTH_LONG).show();
-                    counter++;
+                try {
+                    myAudioRecorder.prepare();
+                    myAudioRecorder.start();
+                } catch (IllegalStateException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
                 }
-                else if(counter==1){
+
+
+                Toast.makeText(getApplicationContext(), "Recording started", Toast.LENGTH_LONG).show();
+                record.setVisibility(View.GONE);
+                stop.setVisibility(View.VISIBLE);
+                counter++;
+            }
+        });
+
+        stop.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
                     myAudioRecorder.stop();
                     myAudioRecorder.release();
                     myAudioRecorder  = null;
 
                     Toast.makeText(getApplicationContext(), "Audio recorded successfully",Toast.LENGTH_LONG).show();
-                    counter++;
+                    stop.setVisibility(View.GONE);
+                    play.setVisibility(View.VISIBLE);
+            }
+        });
+
+        play.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                MediaPlayer m = new MediaPlayer();
+
+                try {
+                    m.setDataSource(outputFile);
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-                else if(counter==2){
-                    MediaPlayer m = new MediaPlayer();
 
-                    try {
-                        m.setDataSource(outputFile);
-                    }
-
-                    catch (IOException e) {
-                        e.printStackTrace();
-                    }
-
-                    try {
-                        m.prepare();
-                    }
-
-                    catch (IOException e) {
-                        e.printStackTrace();
-                    }
-
-                    m.start();
-                    Toast.makeText(getApplicationContext(), "Playing audio", Toast.LENGTH_LONG).show();
+                try {
+                    m.prepare();
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
+
+                m.start();
+                Toast.makeText(getApplicationContext(), "Playing audio", Toast.LENGTH_LONG).show();
+            }
+        });
+
+        save.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                MediaPlayer m = new MediaPlayer();
+
+                try {
+                    m.setDataSource(outputFile);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                try {
+                    m.prepare();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                m.start();
+                Toast.makeText(getApplicationContext(), "Playing audio", Toast.LENGTH_LONG).show();
             }
         });
 
