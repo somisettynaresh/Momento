@@ -42,7 +42,7 @@ public class EventBackupTimeDAO {
 
     public Date getLastBackupTime(int eventType) throws ParseException {
 
-        Date lastBackupTime = new Date();
+        Date lastBackupTime = null;
 
         String[] projection = {"BACKUP_TIME"};
 

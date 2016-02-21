@@ -437,14 +437,14 @@ public class CalendarActivity extends AppCompatActivity {
                         break;
                 }
 
-                Date lastBackupTime = new Date(getToday());
+                Date lastBackupTime = null;
                 try {
                     lastBackupTime = eventBackupTimeDAO.getLastBackupTime(5);
                 } catch (ParseException e) {
                     e.printStackTrace();
                 }
                 System.out.println("SMSTime - "+smsDayTime+" last backup time - "+lastBackupTime);
-                if((typeOfSMS == "INBOX" || typeOfSMS == "SENT") && (smsDayTime.getTime() > lastBackupTime.getTime())){
+                if((typeOfSMS == "INBOX" || typeOfSMS == "SENT") && lastBackupTime!= null && smsDayTime.getTime() > lastBackupTime.getTime()){
                     TextMessage message = new TextMessage(contactName,number,body,smsDayTime);
                     messageList.add(message);
                 }
